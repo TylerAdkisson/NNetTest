@@ -12,11 +12,18 @@ namespace NNet
         public Neuron Bias;
         public double LearningRate = 0.1;
         public double LearningMomentum = 0.0;
-
+        public double WeightDecay = 0.0;
+        public Neuron.ActivationType NeuronType;
 
         public Layer(int neuronCount)
+            : this(neuronCount, Neuron.ActivationType.Tanh)
+        {
+        }
+
+        public Layer(int neuronCount, Neuron.ActivationType neuronType)
         {
             Neurons = new Neuron[neuronCount];
+            NeuronType = neuronType;
 
             InitializeNeurons();
         }
@@ -101,7 +108,7 @@ namespace NNet
             for (int i = 0; i < Neurons.Length; i++)
             {
                 double error = targetValues[i].Value - Neurons[i].Value;
-                Neurons[i].ErrorDelta = Neuron.DerivSigmoid(Neurons[i].Value) * error;
+                Neurons[i].ErrorDelta = Neurons[i].ErrorDerivFunction(Neurons[i].Value) * error;
             }
         }
 
@@ -110,7 +117,7 @@ namespace NNet
             for (int i = 0; i < Neurons.Length; i++)
             {
                 double error = targetValues[i] - Neurons[i].Value;
-                Neurons[i].ErrorDelta = Neuron.DerivSigmoid(Neurons[i].Value) * error;
+                Neurons[i].ErrorDelta = Neurons[i].ErrorDerivFunction(Neurons[i].Value) * error;
             }
         }
 
@@ -134,7 +141,7 @@ namespace NNet
                     errorSum += link.Output.ErrorDelta * link.Weight;
                 }
 
-                Neurons[i].ErrorDelta = Neuron.DerivSigmoid(Neurons[i].Value) * errorSum;
+                Neurons[i].ErrorDelta = Neurons[i].ErrorDerivFunction(Neurons[i].Value) * errorSum;
             }
         }
 
@@ -169,7 +176,9 @@ namespace NNet
                     //   settling at local minima
                     double weightChange = Neurons[i].ErrorDelta * link.Input.Value;
 
-                    link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange);
+                    double decayVal = 2 * WeightDecay * link.Weight;
+
+                    link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange) - decayVal;
                     //link.Weight -= link.Weight * 0.0002;
                     //link.Weight *= 0.9998;
                     link.LastChange = weightChange;
@@ -231,10 +240,10 @@ namespace NNet
         {
             for (int i = 0; i < Neurons.Length; i++)
             {
-                Neurons[i] = new Neuron();
+                Neurons[i] = new Neuron(NeuronType);
             }
 
-            Bias = new Neuron();
+            Bias = new Neuron(NeuronType);
             Bias.Value = 1.0;
         }
     };

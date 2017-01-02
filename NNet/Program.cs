@@ -1026,7 +1026,7 @@ namespace NNet
         }
 
         static Random _shuffleRandom = new Random();
-        static void Shuffle2<T>(T[] array1, T[] array2)
+        internal static void Shuffle2<T>(T[] array1, T[] array2)
         {
             for (int i = 0; i < array1.Length / 2; i++)
             {
@@ -1406,7 +1406,7 @@ namespace NNet
                 {
                     double error = targetSet[inputSetIndex][i] - outputs[i].Value;
                     //double error = outputs[i].Value - targetSet[inputSetIndex][i];
-                    deltasOut[i] = Neuron.DerivSigmoid(outputs[i].Value) * error;
+                    deltasOut[i] = outputs[i].ErrorDerivFunction(outputs[i].Value) * error;
 
                     errSquares += (error * error);
                     errSquares *= 0.5;
@@ -1434,7 +1434,7 @@ namespace NNet
 
                     // Our delta value is the derivitive of our activation value multiplied by
                     //   the summed error value
-                    deltasHid1[i] = Neuron.DerivSigmoid(hidden1[i].Value) * error;
+                    deltasHid1[i] = hidden1[i].ErrorDerivFunction(hidden1[i].Value) * error;
                 }
 
 
@@ -1530,9 +1530,10 @@ namespace NNet
             //AutoEncodeTest();
 
             //NumberTest();
-            Test2();
+            //Test2();
 
             //Test1();
+            ConditionalSwitch.MainVoid(args);
         }
     }
 }
