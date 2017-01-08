@@ -174,7 +174,7 @@ namespace NNet
         /// <returns>The result of the activation function. In the range of ~-0.001..+1.0</returns>
         private static double ActivationLeakyReLU(double value)
         {
-            return Math.Min(Math.Max(0.01 * value, value), 1.0);
+            return Math.Max(-1.0, Math.Min(Math.Max(0.01 * value, value), 1.0));
         }
 
         /// <summary>

@@ -1533,7 +1533,8 @@ namespace NNet
             //Test2();
 
             //Test1();
-            ConditionalSwitch.MainVoid(args);
+            //ConditionalSwitch.MainVoid(args);
+            RecurrentTest.MainVoid(args);
         }
     }
 }

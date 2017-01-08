@@ -23,11 +23,11 @@ namespace NNet
             inputLayer.ConnectForwardFully(hiddenLayer1);
             hiddenLayer1.ConnectForwardFully(outputLayer);
 
-            hiddenLayer1.LearningRate = 0.1;
-            outputLayer.LearningRate = 0.1;
+            hiddenLayer1.LearningRate = 0.3;
+            outputLayer.LearningRate = 0.3;
 
-            hiddenLayer1.LearningMomentum = 0.0;
-            outputLayer.LearningMomentum = 0.0;
+            hiddenLayer1.LearningMomentum = 0.95;
+            outputLayer.LearningMomentum = 0.95;
 
             hiddenLayer1.WeightDecay = 0.000;
             outputLayer.WeightDecay = 0.000;
@@ -157,7 +157,7 @@ namespace NNet
                 Console.WriteLine("MSE: {0:F6}", error);
                 //output.Write(BitConverter.GetBytes((float)error), 0, 4);
 
-                if (error <= 0.0035)
+                if (error <= 0.0012)
                     isTrained = true;
             }
         }

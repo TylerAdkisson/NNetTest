@@ -8,22 +8,30 @@ namespace NNet
 {
     class Layer
     {
+        public enum LearningType
+        {
+            SGDMomentum,
+            Adagrad
+        }
+
         public Neuron[] Neurons;
         public Neuron Bias;
         public double LearningRate = 0.1;
         public double LearningMomentum = 0.0;
         public double WeightDecay = 0.0;
         public Neuron.ActivationType NeuronType;
+        public LearningType LearningMethod;
 
         public Layer(int neuronCount)
-            : this(neuronCount, Neuron.ActivationType.Tanh)
+            : this(neuronCount, Neuron.ActivationType.Tanh, LearningType.Adagrad)
         {
         }
 
-        public Layer(int neuronCount, Neuron.ActivationType neuronType)
+        public Layer(int neuronCount, Neuron.ActivationType neuronType, LearningType learnMethod)
         {
             Neurons = new Neuron[neuronCount];
             NeuronType = neuronType;
+            LearningMethod = learnMethod;
 
             InitializeNeurons();
         }
@@ -103,6 +111,14 @@ namespace NNet
             }
         }
 
+        public void SetValues(Neuron[] values)
+        {
+            for (int i = 0; i < Neurons.Length; i++)
+            {
+                Neurons[i].Value = values[i].Value;
+            }
+        }
+
         public void ComputeError(Neuron[] targetValues)
         {
             for (int i = 0; i < Neurons.Length; i++)
@@ -176,64 +192,69 @@ namespace NNet
                     //   settling at local minima
                     double weightChange = Neurons[i].ErrorDelta * link.Input.Value;
 
-                    double decayVal = 2 * WeightDecay * link.Weight;
 
-                    link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange) - decayVal;
-                    //link.Weight -= link.Weight * 0.0002;
-                    //link.Weight *= 0.9998;
-                    link.LastChange = weightChange;
-
-                    //int intWeight = (int)(link.Weight * 32767);
-                    //link.Weight = intWeight / 32767.0;
+                    switch (LearningMethod)
+                    {
+                        case LearningType.SGDMomentum:
+                            link.LastChange = (LearningMomentum * link.LastChange) + (LearningRate * weightChange) - (2 * WeightDecay * link.Weight);
+                            link.Weight += link.LastChange;
+                            break;
+                        case LearningType.Adagrad:
+                            link.LastChange += weightChange * weightChange;
+                            link.Weight += LearningRate * weightChange / (Math.Sqrt(link.LastChange) + 1e-4);
+                            break;
+                        default:
+                            throw new NotSupportedException("Unsupported learning method");
+                    }
                 }
             }
         }
 
-        public void UpdateWeight(int synapseIndex)
-        {
-            for (int i = 0; i < Neurons.Length; i++)
-            {
-                // Update each input link's weight
-                Synapse link = Neurons[i].Inputs[synapseIndex];
+        //public void UpdateWeight(int synapseIndex)
+        //{
+        //    for (int i = 0; i < Neurons.Length; i++)
+        //    {
+        //        // Update each input link's weight
+        //        Synapse link = Neurons[i].Inputs[synapseIndex];
 
-                // Add to the input link weight a percentage (the learning rate) of the
-                //   derived error value (computed previously) multiplied by the input value
-                // We also add a percentage (momentum value) of the last change, to help overcome
-                //   settling at local minima
-                double weightChange = Neurons[i].ErrorDelta * link.Input.Value;
+        //        // Add to the input link weight a percentage (the learning rate) of the
+        //        //   derived error value (computed previously) multiplied by the input value
+        //        // We also add a percentage (momentum value) of the last change, to help overcome
+        //        //   settling at local minima
+        //        double weightChange = Neurons[i].ErrorDelta * link.Input.Value;
 
-                link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange);
-                //link.Weight -= link.Weight * 0.0002;
-                //link.Weight *= 0.9998;
-                link.LastChange = weightChange;
+        //        link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange);
+        //        //link.Weight -= link.Weight * 0.0002;
+        //        //link.Weight *= 0.9998;
+        //        link.LastChange = weightChange;
 
-                //int intWeight = (int)(link.Weight * 32767);
-                //link.Weight = intWeight / 32767.0;
-            }
-        }
+        //        //int intWeight = (int)(link.Weight * 32767);
+        //        //link.Weight = intWeight / 32767.0;
+        //    }
+        //}
 
-        public void UpdateNeuronWeight(int neuronIndex)
-        {
-            // Update each input link's weight
-            for (int k = 0; k < Neurons[neuronIndex].Inputs.Length; k++)
-            {
-                Synapse link = Neurons[neuronIndex].Inputs[k];
+        //public void UpdateNeuronWeight(int neuronIndex)
+        //{
+        //    // Update each input link's weight
+        //    for (int k = 0; k < Neurons[neuronIndex].Inputs.Length; k++)
+        //    {
+        //        Synapse link = Neurons[neuronIndex].Inputs[k];
 
-                // Add to the input link weight a percentage (the learning rate) of the
-                //   derived error value (computed previously) multiplied by the input value
-                // We also add a percentage (momentum value) of the last change, to help overcome
-                //   settling at local minima
-                double weightChange = Neurons[neuronIndex].ErrorDelta * link.Input.Value;
+        //        // Add to the input link weight a percentage (the learning rate) of the
+        //        //   derived error value (computed previously) multiplied by the input value
+        //        // We also add a percentage (momentum value) of the last change, to help overcome
+        //        //   settling at local minima
+        //        double weightChange = Neurons[neuronIndex].ErrorDelta * link.Input.Value;
 
-                link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange);
-                //link.Weight -= link.Weight * 0.0002;
-                //link.Weight *= 0.9998;
-                link.LastChange = weightChange;
+        //        link.Weight += (LearningRate * weightChange) + (LearningMomentum * link.LastChange);
+        //        //link.Weight -= link.Weight * 0.0002;
+        //        //link.Weight *= 0.9998;
+        //        link.LastChange = weightChange;
 
-                //int intWeight = (int)(link.Weight * 32767);
-                //link.Weight = intWeight / 32767.0;
-            }
-        }
+        //        //int intWeight = (int)(link.Weight * 32767);
+        //        //link.Weight = intWeight / 32767.0;
+        //    }
+        //}
 
 
         private void InitializeNeurons()
